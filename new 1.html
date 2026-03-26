@@ -1,0 +1,1019 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🐻</text></svg>">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Whiteout Survival - Bear Hunt March Calculator</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore-compat.js"></script>
+
+    <style>
+        :root {
+            --bg: #0d1117;
+            --card: #161b22;
+            --text: #c9d1d9;
+            --green: #238636;
+            --green-hover: #2ea043;
+            --red: #b22222;
+            --red-hover: #cc2222;
+            --border: #30363d;
+            --muted: #8b949e;
+            --focus: #58a6ff;
+            --highlight: rgba(35, 134, 54, 0.15);
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            margin: 0;
+            padding: 20px;
+            line-height: 1.6;
+            transition: direction 0.3s ease;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .header { text-align: center; margin-bottom: 10px; }
+        .header h1 { margin: 0; font-size: 24px; color: #ffffff; }
+        .header p { margin: 5px 0 0 0; color: var(--muted); font-size: 14px; }
+
+        .card {
+            background-color: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .card-title {
+            margin-top: 0; margin-bottom: 15px; font-size: 18px; font-weight: 600;
+            color: #ffffff; display: flex; align-items: center; justify-content: space-between;
+            border-bottom: 1px solid var(--border); padding-bottom: 10px;
+        }
+
+        .input-group { display: flex; flex-direction: column; margin-bottom: 15px; }
+        .input-group label { margin-bottom: 6px; font-size: 14px; font-weight: 500; }
+        .input-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; }
+
+        input[type="number"], input[type="text"], input[type="password"], select {
+            background-color: var(--bg); color: var(--text); border: 1px solid var(--border);
+            border-radius: 8px; padding: 10px 12px; font-family: 'Inter', sans-serif;
+            font-size: 14px; outline: none; transition: border-color 0.2s; width: 100%; box-sizing: border-box;
+        }
+
+        input[type="number"]:focus, input[type="text"]:focus, input[type="password"]:focus, select:focus {
+            border-color: var(--focus);
+        }
+
+        .checkbox-group {
+            display: flex; align-items: center; gap: 10px; margin-bottom: 15px;
+            background: var(--bg); padding: 10px; border-radius: 8px; border: 1px solid var(--border);
+        }
+        .checkbox-group label { margin: 0; cursor: pointer; flex-grow: 1; font-size: 14px; font-weight: 500; }
+        input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--green); cursor: pointer; }
+
+        .level-input { width: 80px !important; padding: 5px 8px !important; margin-left: 10px; }
+
+        .live-box {
+            background: rgba(88, 166, 255, 0.1); border: 1px solid var(--focus); padding: 15px;
+            border-radius: 8px; font-size: 16px; font-weight: 600; text-align: center;
+            color: #ffffff; margin-bottom: 15px;
+        }
+
+        .presets-section { margin-top: 15px; }
+        .presets-title { font-size: 13px; color: var(--muted); margin-bottom: 8px; font-weight: 600; }
+        .presets-grid { display: flex; flex-wrap: wrap; gap: 8px; }
+
+        .btn {
+            background-color: var(--border); color: var(--text); border: none; border-radius: 6px;
+            padding: 8px 14px; font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 600;
+            cursor: pointer; transition: all 0.2s ease;
+        }
+        .btn:hover:not(:disabled) { background-color: #484f58; }
+        .btn.green { background-color: var(--green); color: #ffffff; }
+        .btn.green:hover:not(:disabled) { background-color: var(--green-hover); }
+        .btn.red { background-color: var(--red); color: #ffffff; }
+        .btn.red:hover:not(:disabled) { background-color: var(--red-hover); }
+        .btn.blue { background-color: var(--focus); color: #ffffff; }
+        .btn.blue:hover:not(:disabled) { background-color: #318bf0; }
+        .btn:disabled { opacity: 0.5; cursor: not-allowed; background-color: var(--red) !important; }
+
+        .btn-action { width: 100%; padding: 12px; font-size: 14px; margin-bottom: 10px; border-radius: 8px; display: flex; align-items: center; justify-content: center; gap: 8px; }
+        .btn-action:last-child { margin-bottom: 0; }
+        .opt-btn { margin-top: 15px; width: 100%; padding: 12px; font-size: 15px; border-radius: 8px; }
+        .copy-btn { background: none; border: none; cursor: pointer; padding: 0 4px; font-size: 14px; transition: transform 0.1s; }
+        .copy-btn:hover { transform: scale(1.1); }
+        .copy-btn:active { transform: scale(0.9); }
+
+        .artistic-divider { position: relative; text-align: center; margin: 25px 0; }
+        .artistic-divider::before { content: ''; position: absolute; top: 50%; left: 0; right: 0; border-top: 1px dashed var(--border); z-index: 1; }
+        .artistic-divider span { position: relative; background-color: var(--card); padding: 0 15px; color: var(--muted); font-size: 18px; z-index: 2; }
+
+        .results-section { font-size: 15px; }
+        .res-row { display: flex; justify-content: space-between; margin-bottom: 8px; padding-bottom: 8px; border-bottom: 1px solid rgba(48, 54, 61, 0.5); }
+        .res-row:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+        .res-label { color: var(--muted); font-weight: 500; }
+        .res-value { font-weight: 600; color: #ffffff; text-align: end; }
+
+        .highlight-box { background-color: var(--highlight); border: 1px solid var(--green); border-radius: 8px; padding: 15px; margin-top: 20px; }
+        .warning-box { background-color: rgba(178, 34, 34, 0.1); border: 1px solid var(--red); border-radius: 8px; padding: 15px; margin-bottom: 20px; color: #ff7b72; display: none; }
+        .warning-box ul { margin: 5px 0 0 0; padding-left: 20px; }
+        .disabled-section { opacity: 0.5; pointer-events: none; }
+        footer { text-align: center; margin-top: 20px; padding-top: 20px; border-top: 1px solid var(--border); color: var(--muted); font-size: 13px; }
+
+        /* ---------- ACCOUNT UI STYLES ---------- */
+        .fab {
+            position: fixed; bottom: 30px; right: 30px; width: 56px; height: 56px;
+            border-radius: 50%; background: var(--card); border: 2px solid var(--border);
+            color: white; display: flex; align-items: center; justify-content: center;
+            font-size: 24px; cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+            z-index: 1000; transition: all 0.2s ease;
+        }
+        .fab:hover { transform: scale(1.05); border-color: var(--focus); }
+        
+        .modal-overlay {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.8); z-index: 1001; justify-content: center; align-items: center;
+            backdrop-filter: blur(4px);
+        }
+        .modal-content {
+            background: var(--bg); border: 1px solid var(--border); border-radius: 12px;
+            padding: 25px; width: 90%; max-width: 400px; color: var(--text); position: relative;
+        }
+        .modal-close {
+            position: absolute; top: 15px; right: 20px; cursor: pointer; color: var(--muted);
+            font-size: 20px; transition: color 0.2s;
+        }
+        .modal-close:hover { color: white; }
+
+        .tab-group { display: flex; margin-bottom: 20px; border-bottom: 1px solid var(--border); }
+        .tab { flex: 1; text-align: center; padding: 10px; cursor: pointer; color: var(--muted); transition: all 0.2s; }
+        .tab.active { color: var(--focus); border-bottom: 2px solid var(--focus); font-weight: 600; }
+        
+        .char-item {
+            background: var(--card); padding: 15px; border: 1px solid var(--border); border-radius: 8px;
+            margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; cursor: pointer;
+        }
+        .char-item:hover { border-color: var(--muted); }
+        .char-item.active-char { border-color: var(--focus); background: rgba(88, 166, 255, 0.05); }
+        .char-info { flex-grow: 1; }
+        .char-name { font-weight: 600; color: white; margin-bottom: 5px; }
+        .char-actions { display: flex; gap: 5px; }
+        .char-actions button { padding: 6px 10px; font-size: 12px; }
+
+        .toast-container { position: fixed; top: 20px; right: 20px; z-index: 2000; display: flex; flex-direction: column; gap: 10px; }
+        .toast { background: var(--green); color: white; padding: 12px 20px; border-radius: 8px; font-weight: 500; font-size: 14px; box-shadow: 0 4px 6px rgba(0,0,0,0.2); animation: slideIn 0.3s ease-out; }
+        .toast.error { background: var(--red); }
+        @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+
+        [dir="rtl"] .fab { right: auto; left: 30px; }
+        [dir="rtl"] .modal-close { right: auto; left: 20px; }
+        [dir="rtl"] .char-actions { flex-direction: row-reverse; }
+        [dir="rtl"] .level-input { margin-left: 0; margin-right: 10px; }
+        [dir="rtl"] .warning-box ul { padding-left: 0; padding-right: 20px; }
+        [dir="rtl"] .checkbox-group { flex-direction: row-reverse; }
+        [dir="rtl"] .checkbox-group label { text-align: right; }
+    </style>
+</head>
+<body>
+
+<div id="toastContainer" class="toast-container"></div>
+<div class="fab" id="accountFab" onclick="openAuthModal()" title="Account & Characters">👤</div>
+
+<div id="authModal" class="modal-overlay">
+    <div class="modal-content">
+        <span class="modal-close" onclick="closeAuthModal()">✖</span>
+        
+        <div id="authSection">
+            <h2 style="margin-top:0; color:white;">Account</h2>
+            <div class="tab-group">
+                <div class="tab active" id="tabLogin" onclick="switchAuthTab('login')">Log In</div>
+                <div class="tab" id="tabRegister" onclick="switchAuthTab('register')">Sign Up</div>
+            </div>
+            <div class="input-group">
+                <label>Username</label>
+                <input type="text" id="authUsername" placeholder="Enter username">
+            </div>
+            <div class="input-group">
+                <label>Password</label>
+                <input type="password" id="authPassword" placeholder="Enter password">
+            </div>
+            <button class="btn green" style="width:100%; padding: 12px; margin-top:10px;" id="authSubmitBtn" onclick="handleAuth()">Log In</button>
+        </div>
+
+        <div id="charSection" style="display:none;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <h2 style="margin:0; color:white;">My Characters</h2>
+                <button class="btn red" style="padding: 6px 12px; font-size: 12px;" onclick="handleLogout()">Log Out</button>
+            </div>
+            
+            <div class="input-group" style="flex-direction: row; gap: 10px;">
+                <input type="text" id="newCharName" placeholder="New Character Name">
+                <button class="btn green" onclick="createCharacter()">Add</button>
+            </div>
+            
+            <div style="font-size: 13px; color: var(--muted); margin-bottom: 10px;">Select a character to load/save settings to it.</div>
+            <div id="charList" style="max-height: 300px; overflow-y: auto;"></div>
+        </div>
+    </div>
+</div>
+
+<div class="container">
+    <div class="card" style="padding: 10px 20px;">
+        <div class="input-group" style="margin: 0; flex-direction: row; align-items: center; justify-content: space-between;">
+            <label style="margin: 0;" data-i18n="lang_label">Language / اللغة:</label>
+            <select id="langSelect" style="width: auto; min-width: 150px;">
+                <option value="en">🇬🇧 English</option>
+                <option value="ar">🇸🇦 العربية</option>
+                <option value="tr">🇹🇷 Türkçe</option>
+                <option value="es">🇪🇸 Español</option>
+                <option value="ko">🇰🇷 한국어</option>
+                <option value="zh">🇨🇳 中文</option>
+            </select>
+        </div>
+    </div>
+
+    <div class="header">
+        <h1 data-i18n="title">❄️ Whiteout Survival - Bear Hunt March Calculator</h1>
+        <p data-i18n="subtitle">Optimize your rally damage effortlessly.</p>
+        <p id="activeCharDisplay" style="color: var(--focus); font-weight: 600; display: none;">Active Character: <span id="activeCharName">None</span></p>
+    </div>
+
+    <div class="card">
+        <h2 class="card-title" data-i18n="general_settings">General Inputs</h2>
+        <div class="input-group"><label data-i18n="base_cap">Base Deployment Capacity:</label><input type="number" id="baseCap" value="140000" min="0"></div>
+        <div class="checkbox-group"><input type="checkbox" id="apeCheck"><label for="apeCheck" data-i18n="ape_check">Snow Ape Bonus (+1500 per level)</label><label data-i18n="level_lbl" style="flex-grow:0; margin-left: auto;">Level:</label><input type="number" id="apeLevel" class="level-input" value="1" min="1" max="10"></div>
+        <div class="checkbox-group"><label for="ursaLevel" data-i18n="ursa_level">Cyril Ursa's Bane Level (0-10, +3000 per level):</label><input type="number" id="ursaLevel" class="level-input" value="0" min="0" max="10" style="margin-left: auto;"></div>
+        <div class="checkbox-group"><input type="checkbox" id="buff1Check"><label for="buff1Check" data-i18n="buff1">Deployment Capacity Buff I (+10%)</label></div>
+        <div class="checkbox-group"><input type="checkbox" id="buff2Check"><label for="buff2Check" data-i18n="buff2">Deployment Capacity Buff II (+20%)</label></div>
+        <div class="live-box"><span data-i18n="total_cap">Total Deployment Capacity:</span> <span id="totalCapDisplay">140,000</span></div>
+        <div class="input-row">
+            <div class="input-group"><label data-i18n="tot_inf">Total Infantry:</label><input type="number" id="infTotal" value="300000" min="0"></div>
+            <div class="input-group"><label data-i18n="tot_lan">Total Lancers:</label><input type="number" id="lanTotal" value="300000" min="0"></div>
+            <div class="input-group"><label data-i18n="tot_mark">Total Marksmen:</label><input type="number" id="markTotal" value="300000" min="0"></div>
+        </div>
+        <div class="input-group" style="margin-top: 10px;"><label data-i18n="joiner_count">Number of Joiner Marches:</label><input type="number" id="joinerCount" value="5" min="0"></div>
+    </div>
+
+    <div class="card" id="mainCard">
+        <h2 class="card-title"><span data-i18n="main_card_title">Main March Card</span><div style="display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: normal;"><label for="openerCheck" data-i18n="opener_check">I am the Rally Opener</label><input type="checkbox" id="openerCheck" checked></div></h2>
+        <div id="mainInputsWrapper">
+            <div class="input-row">
+                <div class="input-group"><label data-i18n="inf_pct">Infantry %:</label><input type="number" id="mInf" value="5" min="0" max="100" step="0.1"></div>
+                <div class="input-group"><label data-i18n="lan_pct">Lancers %:</label><input type="number" id="mLan" value="5" min="0" max="100" step="0.1"></div>
+                <div class="input-group"><label data-i18n="mark_pct">Marksmen %:</label><input type="number" id="mMark" value="90" min="0" max="100" step="0.1"></div>
+            </div>
+            <div class="presets-section"><div class="presets-title" data-i18n="sugg_main">Suggested Ratios (Main)</div><div class="presets-grid" id="mainPresets"></div></div>
+        </div>
+    </div>
+
+    <div class="card">
+        <h2 class="card-title" data-i18n="joiner_card_title">Joiner March Card</h2>
+        <div class="input-row">
+            <div class="input-group">
+                <label data-i18n="inf_pct">Infantry %:</label>
+                <input type="number" id="jInf" value="2" min="2" max="15" step="0.1">
+            </div>
+            <div class="input-group">
+                <label data-i18n="lan_pct">Lancers %:</label>
+                <input type="number" id="jLan" value="2" min="2" max="20" step="0.1">
+            </div>
+            <div class="input-group">
+                <label data-i18n="mark_pct">Marksmen %:</label>
+                <input type="number" id="jMark" value="96" min="0" max="100" step="0.1">
+            </div>
+        </div>
+        <div class="presets-section"><div class="presets-title" data-i18n="sugg_join">Suggested Ratios</div><div class="presets-grid" id="joinerPresets"></div></div>
+        <button id="autoOptBtn" class="btn green opt-btn" data-i18n="auto_opt">✨ Auto-Optimize Joiner Ratios</button>
+    </div>
+
+    <div class="card">
+        <h2 class="card-title" data-i18n="actions">Actions</h2>
+        <div class="input-row">
+            <button id="calcBtn" class="btn btn-action green" data-i18n="calc_btn">🔄 Calculate Distribution Now</button>
+            <button id="saveBtn" class="btn btn-action" data-i18n="save_btn">💾 Save All Settings</button>
+            <button id="loadBtn" class="btn btn-action" data-i18n="load_btn">📥 Load Saved Settings</button>
+            <button id="resetBtn" class="btn btn-action red" data-i18n="reset_btn">🔄 Reset to Factory Defaults</button>
+        </div>
+    </div>
+
+    <div class="card">
+        <h2 class="card-title" data-i18n="results">Calculation Result</h2>
+        <div id="warningBox" class="warning-box"><strong data-i18n="warnings">Warnings:</strong><ul id="warningList"></ul></div>
+        <div class="results-section">
+            <div class="res-row"><span class="res-label" data-i18n="main_march_res">Main March Troops</span><span class="res-value" id="outMainHtml"></span></div>
+            <div class="res-row"><span class="res-label" data-i18n="tot_march_res">Total march troops (Main):</span><span class="res-value" id="outMainTotal"></span></div>
+            <div class="artistic-divider"><span>❄️ 🐻 ❄️</span></div>
+            <div class="res-row"><span class="res-label" id="lblEachJoiner" data-i18n="each_joiner_res">Each Joiner March</span><span class="res-value" id="outJoinerHtml"></span></div>
+            <div class="res-row"><span class="res-label" data-i18n="tot_march_res_join">Total march troops (Joiner):</span><span class="res-value" id="outJoinerTotal"></span></div>
+            <div class="res-row"><span class="res-label" data-i18n="tot_join_mark_res">Total Marksmen used in all Joiners:</span><span class="res-value" id="outTotJoinMark"></span></div>
+            <div class="artistic-divider"><span>❄️ 🐻 ❄️</span></div>
+            <div class="res-row"><span class="res-label" data-i18n="rem_mark_res">Remaining Marksmen after distribution:</span><span class="res-value" id="outRemMark"></span></div>
+            <div class="artistic-divider"><span>❄️ 🐻 ❄️</span></div>
+            <div class="highlight-box">
+                <div style="font-weight: 600; margin-bottom: 10px; color: #ffffff;" data-i18n="tot_used_res">Total Troops Used in All Marches:</div>
+                <div class="res-row" style="border:none; padding:0;"><span class="res-label">Infantry:</span><span class="res-value" id="outUsedInf"></span></div>
+                <div class="res-row" style="border:none; padding:0; margin-top:5px;"><span class="res-label">Lancers:</span><span class="res-value" id="outUsedLan"></span></div>
+                <div class="res-row" style="border:none; padding:0; margin-top:5px;"><span class="res-label">Marksmen:</span><span class="res-value" id="outUsedMark"></span></div>
+            </div>
+        </div>
+    </div>
+    <footer data-i18n="footer_text">❄️ This tool was designed with ❤️ By Dr Abaziz for all Beloved Members of IMP ❄️</footer>
+</div>
+
+<script>
+// ==========================================
+// 1. FIREBASE CONFIGURATION
+// ==========================================
+const firebaseConfig = {
+    apiKey: "AIzaSyAj2mtAQGU5VTGTnAj-t6_Nb6EIfBT20ik",
+    authDomain: "wosbhv4.firebaseapp.com",
+    projectId: "wosbhv4",
+    storageBucket: "wosbhv4.firebasestorage.app",
+    messagingSenderId: "576982014653",
+    appId: "1:576982014653:web:dff1be975aa3724491b5d4",
+    measurementId: "G-2J50FYD90N"
+};
+
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.firestore();
+const FAKE_DOMAIN = "@woscalc.local";
+
+let activeUser = null;
+let activeCharacterId = null;
+let characters = [];
+let syncTimeout = null; // For debouncing cloud saves
+
+// ==========================================
+// 2. ACCOUNT & UI LOGIC
+// ==========================================
+function showToast(msg, isError = false) {
+    const container = document.getElementById('toastContainer');
+    const toast = document.createElement('div');
+    toast.className = `toast ${isError ? 'error' : ''}`;
+    toast.innerText = msg;
+    container.appendChild(toast);
+    setTimeout(() => { toast.remove(); }, 3000);
+}
+
+function openAuthModal() { document.getElementById('authModal').style.display = 'flex'; fetchCharacters(); }
+function closeAuthModal() { document.getElementById('authModal').style.display = 'none'; }
+
+let currentAuthMode = 'login';
+function switchAuthTab(mode) {
+    currentAuthMode = mode;
+    document.getElementById('tabLogin').classList.toggle('active', mode === 'login');
+    document.getElementById('tabRegister').classList.toggle('active', mode === 'register');
+    document.getElementById('authSubmitBtn').innerText = mode === 'login' ? 'Log In' : 'Sign Up';
+}
+
+auth.onAuthStateChanged(user => {
+    activeUser = user;
+    if (user) {
+        document.getElementById('authSection').style.display = 'none';
+        document.getElementById('charSection').style.display = 'block';
+        document.getElementById('accountFab').innerText = '🔥';
+        fetchCharacters();
+    } else {
+        document.getElementById('authSection').style.display = 'block';
+        document.getElementById('charSection').style.display = 'none';
+        document.getElementById('accountFab').innerText = '👤';
+        document.getElementById('activeCharDisplay').style.display = 'none';
+        activeCharacterId = null;
+    }
+});
+
+function handleAuth() {
+    const user = document.getElementById('authUsername').value.trim();
+    const pass = document.getElementById('authPassword').value;
+    if (!user || !pass) return showToast('Please enter username and password', true);
+    const fakeEmail = user + FAKE_DOMAIN;
+    if (currentAuthMode === 'login') {
+        auth.signInWithEmailAndPassword(fakeEmail, pass)
+            .then(() => showToast(`Welcome back!`))
+            .catch(err => showToast(err.message, true));
+    } else {
+        auth.createUserWithEmailAndPassword(fakeEmail, pass)
+            .then(() => showToast('Account created!'))
+            .catch(err => showToast(err.message, true));
+    }
+}
+
+function handleLogout() { auth.signOut().then(() => { activeCharacterId = null; location.reload(); }); }
+
+// ==========================================
+// 3. CHARACTER & CLOUD SYNC
+// ==========================================
+function fetchCharacters() {
+    if (!activeUser) return;
+    db.collection('users').doc(activeUser.uid).collection('characters').orderBy('createdAt', 'desc').get()
+        .then(snapshot => {
+            characters = [];
+            snapshot.forEach(doc => characters.push({ id: doc.id, ...doc.data() }));
+            renderCharacters();
+        });
+}
+
+function renderCharacters() {
+    const list = document.getElementById('charList');
+    list.innerHTML = '';
+    characters.forEach(char => {
+        const isActive = char.id === activeCharacterId;
+        const div = document.createElement('div');
+        div.className = `char-item ${isActive ? 'active-char' : ''}`;
+        div.onclick = () => loadCharacter(char.id);
+        div.innerHTML = `
+            <div class="char-info"><div class="char-name">${char.name}</div></div>
+            <div class="char-actions">
+                <button class="btn red" onclick="event.stopPropagation(); deleteCharacter('${char.id}')">Del</button>
+            </div>
+        `;
+        list.appendChild(div);
+    });
+}
+
+function createCharacter() {
+    const name = document.getElementById('newCharName').value.trim();
+    if (!name) return;
+    db.collection('users').doc(activeUser.uid).collection('characters').add({
+        name: name, settings: getSettingsObject(), createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    }).then(() => { document.getElementById('newCharName').value = ''; fetchCharacters(); });
+}
+
+function deleteCharacter(id) {
+    if (confirm("Delete character?")) {
+        db.collection('users').doc(activeUser.uid).collection('characters').doc(id).delete().then(() => fetchCharacters());
+    }
+}
+
+function loadCharacter(id) {
+    const char = characters.find(c => c.id === id);
+    if (char) {
+        activeCharacterId = id;
+        applySettingsObject(char.settings);
+        updateActiveCharDisplay(char.name);
+        closeAuthModal();
+        showToast(`Loaded ${char.name}`);
+    }
+}
+
+function updateActiveCharDisplay(name) {
+    document.getElementById('activeCharDisplay').style.display = 'block';
+    document.getElementById('activeCharName').innerText = name;
+}
+
+// Cloud Auto-Sync with Debounce (Wait 500ms after user stops typing)
+function triggerCloudSync() {
+    if (!activeUser || !activeCharacterId) return;
+    if (syncTimeout) clearTimeout(syncTimeout);
+    syncTimeout = setTimeout(() => {
+        db.collection('users').doc(activeUser.uid).collection('characters').doc(activeCharacterId)
+          .update({ settings: getSettingsObject() })
+          .then(() => console.log("Cloud Synced"))
+          .catch(e => console.error("Sync error", e));
+    }, 500);
+}
+
+// ==========================================
+// 4. CALCULATOR & TRANSLATIONS
+// ==========================================
+const I18N = {
+    en: {
+        lang_label: "Language:",
+        title: "❄️ Whiteout Survival - Bear Hunt March Calculator",
+        subtitle: "Optimize your rally damage effortlessly.",
+        general_settings: "General Inputs",
+        base_cap: "Base Deployment Capacity per March:",
+        ape_check: "Snow Ape Bonus (+1500 per level)",
+        level_lbl: "Level:",
+        ursa_level: "Cyril Ursa's Bane Level (0-10):",
+        buff1: "Deployment Capacity Buff I (+10%)",
+        buff2: "Deployment Capacity Buff II (+20%)",
+        total_cap: "Total Deployment Capacity (Auto-calculated):",
+        tot_inf: "Total Infantry:",
+        tot_lan: "Total Lancers:",
+        tot_mark: "Total Marksmen:",
+        joiner_count: "Number of Joiner Marches:",
+        main_card_title: "Main March Card",
+        opener_check: "I am the Rally Opener",
+        inf_pct: "Infantry %:",
+        lan_pct: "Lancers %:",
+        mark_pct: "Marksmen %:",
+        sugg_main: "Suggested Ratios (Main)",
+        joiner_card_title: "Joiner March Card",
+        sugg_join: "Suggested Ratios (Joiners – syncs with Main)",
+        auto_opt: "✨ Auto-Optimize Joiner Ratios",
+        actions: "Actions",
+        calc_btn: "🔄 Calculate Distribution Now",
+        save_btn: "💾 Save All Settings",
+        load_btn: "📥 Load Saved Settings",
+        reset_btn: "🔄 Reset to Factory Defaults",
+        results: "Calculation Result",
+        warnings: "Warnings:",
+        main_march_res: "Main March Troops:",
+        tot_march_res: "Total march troops (Main):",
+        tot_march_res_join: "Total march troops (Joiner):",
+        each_joiner_res: "Each Joiner March (out of {0}):",
+        tot_join_mark_res: "Total Marksmen used in all Joiners:",
+        rem_mark_res: "Remaining Marksmen after distribution:",
+        tot_used_res: "Total Troops Used in All Marches:",
+        disabled_opener: "Disabled – Not a Rally Opener",
+        inf_exceed: "Infantry exceeded by {0} troops.",
+        lan_exceed: "Lancers exceeded by {0} troops.",
+        mark_exceed: "Marksmen exceeded by {0} troops.",
+        pct_exceed: "Percentages sum exceeds 100%!",
+        not_enough_tooltip: "Not enough troops. Needed: {0}",
+        reset_confirm: "Are you sure you want to reset to factory defaults?",
+        save_alert: "Settings saved successfully!",
+        load_alert: "Settings loaded successfully!",
+        footer_text: "❄️ This tool was designed with ❤️ By Dr Abaziz for all Beloved Members of IMP ❄️"
+    },
+    ar: {
+        lang_label: "اللغة:",
+        title: "❄️ النجاة في الصقيع - حاسبة جنود حشد الدب",
+        subtitle: "قم بتحسين ضرر مسيرتك بكل سهولة.",
+        general_settings: "الإعدادات العامة",
+        base_cap: "سعة النشر الأساسية للمسيرة:",
+        ape_check: "مكافأة القرد الثلجي (+1500 لكل مستوى)",
+        level_lbl: "المستوى:",
+        ursa_level: "مستوى سيريل لعنة الدب (0-10):",
+        buff1: "عنصر تعزيز سعة النشر الأول (+10%)",
+        buff2: "عنصر تعزيز سعة النشر الثاني (+20%)",
+        total_cap: "إجمالي سعة النشر (تلقائي):",
+        tot_inf: "إجمالي المشاة المتاح:",
+        tot_lan: "إجمالي الرماح المتاح:",
+        tot_mark: "إجمالي الرماة المتاح:",
+        joiner_count: "عدد مسيرات الانضمام:",
+        main_card_title: "المسيرة الرئيسية",
+        opener_check: "أنا مطلق الحشد",
+        inf_pct: "نسبة المشاة %:",
+        lan_pct: "نسبة الرماح %:",
+        mark_pct: "نسبة الرماة %:",
+        sugg_main: "النسب المقترحة (الرئيسية)",
+        joiner_card_title: "مسيرات الانضمام",
+        sugg_join: "النسب المقترحة (الانضمام - تتزامن مع الرئيسية)",
+        auto_opt: "✨ تحسين نسب الانضمام تلقائياً",
+        actions: "الإجراءات",
+        calc_btn: "🔄 حساب التوزيع الآن",
+        save_btn: "💾 حفظ جميع الإعدادات",
+        load_btn: "📥 تحميل الإعدادات المحفوظة",
+        reset_btn: "🔄 إعادة ضبط المصنع",
+        results: "النتائج",
+        warnings: "تحذيرات:",
+        main_march_res: "قوات المسيرة الرئيسية:",
+        tot_march_res: "إجمالي قوات المسيرة (الرئيسية):",
+        tot_march_res_join: "إجمالي قوات المسيرة (الانضمام):",
+        each_joiner_res: "كل مسيرة انضمام (من أصل {0}):",
+        tot_join_mark_res: "إجمالي الرماة في جميع مسيرات الانضمام:",
+        rem_mark_res: "الرماة المتبقون بعد التوزيع:",
+        tot_used_res: "إجمالي القوات المستخدمة في جميع المسيرات:",
+        disabled_opener: "معطل – لست مطلق الحشد",
+        inf_exceed: "تجاوز المشاة بمقدار {0} جندي.",
+        lan_exceed: "تجاوز الرماح بمقدار {0} جندي.",
+        mark_exceed: "تجاوز الرماة بمقدار {0} جندي.",
+        pct_exceed: "مجموع النسب يتجاوز 100%!",
+        not_enough_tooltip: "قوات غير كافية. المطلوب: {0}",
+        reset_confirm: "هل أنت متأكد أنك تريد استعادة إعدادات المصنع؟",
+        save_alert: "تم حفظ الإعدادات بنجاح!",
+        load_alert: "تم تحميل الإعدادات بنجاح!",
+        footer_text: "❄️ تم تصميم هذه الأداة بكل ❤️ بواسطة د. عبدالعزيز لجميع أعضاء IMP الأحباء ❄️"
+    },
+    tr: {
+        lang_label: "Dil:",
+        title: "❄️ Whiteout Survival - Ayı Avı Kıta Hesaplayıcı",
+        subtitle: "Ralli hasarınızı zahmetsizce optimize edin.",
+        general_settings: "Genel Ayarlar",
+        base_cap: "Kıta Başına Temel Kapasite:",
+        ape_check: "Kar Maymunu Bonusu (Seviye başı +1500)",
+        level_lbl: "Seviye:",
+        ursa_level: "Cyril Ayının Laneti Seviyesi (0-10):",
+        buff1: "Kapasite Güçlendirmesi I (+10%)",
+        buff2: "Kapasite Güçlendirmesi II (+20%)",
+        total_cap: "Toplam Dağıtım Kapasitesi (Oto):",
+        tot_inf: "Toplam Piyade:",
+        tot_lan: "Toplam Mızraklı:",
+        tot_mark: "Toplam Nişancı:",
+        joiner_count: "Katılım Kıtası Sayısı:",
+        main_card_title: "Ana Kıta Kartı",
+        opener_check: "Ralli Başlatan Benim",
+        inf_pct: "Piyade %:",
+        lan_pct: "Mızraklı %:",
+        mark_pct: "Nişancı %:",
+        sugg_main: "Önerilen Oranlar (Ana)",
+        joiner_card_title: "Katılım Kıtaları",
+        sugg_join: "Önerilen Oranlar (Katılım - Ana ile senkronize)",
+        auto_opt: "✨ Katılım Oranlarını Otomatik Optimize Et",
+        actions: "İşlemler",
+        calc_btn: "🔄 Dağıtımı Şimdi Hesapla",
+        save_btn: "💾 Tüm Ayarları Kaydet",
+        load_btn: "📥 Kaydedilen Ayarları Yükle",
+        reset_btn: "🔄 Fabrika Ayarlarına Sıfırla",
+        results: "Hesaplama Sonucu",
+        warnings: "Uyarılar:",
+        main_march_res: "Ana Kıta Birlikleri:",
+        tot_march_res: "Toplam Kıta Birlikleri (Ana):",
+        tot_march_res_join: "Toplam Kıta Birlikleri (Katılım):",
+        each_joiner_res: "Her Katılım Kıtası ({0} kıta içinden):",
+        tot_join_mark_res: "Tüm katılımlarda kullanılan Toplam Nişancı:",
+        rem_mark_res: "Dağıtımdan sonra kalan Nişancı:",
+        tot_used_res: "Tüm Kıtalarda Kullanılan Toplam Birlik:",
+        disabled_opener: "Devre Dışı – Ralli Başlatan Değilsiniz",
+        inf_exceed: "Piyade kapasitesi {0} birlik aşıldı.",
+        lan_exceed: "Mızraklı kapasitesi {0} birlik aşıldı.",
+        mark_exceed: "Nişancı kapasitesi {0} birlik aşıldı.",
+        pct_exceed: "Yüzdeler toplamı %100'ü aşıyor!",
+        not_enough_tooltip: "Yetersiz birlik. Gereken: {0}",
+        reset_confirm: "Fabrika ayarlarına sıfırlamak istediğinizden emin misiniz?",
+        save_alert: "Ayarlar başarıyla kaydedildi!",
+        load_alert: "Ayarlar başarıyla yüklendi!",
+        footer_text: "❄️ Bu araç IMP'nin tüm Sevgili Üyeleri için Dr Abaziz tarafından ❤️ ile tasarlandı ❄️"
+    },
+    es: {
+        lang_label: "Idioma:",
+        title: "❄️ Whiteout Survival - Calculadora de Marcha Oso",
+        subtitle: "Optimiza el daño de tu concentración sin esfuerzo.",
+        general_settings: "Ajustes Generales",
+        base_cap: "Capacidad de Despliegue Base por Marcha:",
+        ape_check: "Bono Mono de Nieve (+1500 por nivel)",
+        level_lbl: "Nivel:",
+        ursa_level: "Nivel de la Perdición de la Osa Cyril (0-10):",
+        buff1: "Mejora de Capacidad I (+10%)",
+        buff2: "Mejora de Capacidad II (+20%)",
+        total_cap: "Capacidad Total de Despliegue (Auto):",
+        tot_inf: "Total de Infantería:",
+        tot_lan: "Total de Lanceros:",
+        tot_mark: "Total de Tiradores:",
+        joiner_count: "Número de Marchas de Unión:",
+        main_card_title: "Tarjeta de Marcha Principal",
+        opener_check: "Soy el Iniciador de la Concentración",
+        inf_pct: "Infantería %:",
+        lan_pct: "Lanceros %:",
+        mark_pct: "Tiradores %:",
+        sugg_main: "Proporciones Sugeridas (Principal)",
+        joiner_card_title: "Tarjeta de Marchas de Unión",
+        sugg_join: "Proporciones Sugeridas (Unión – sincronizado con Principal)",
+        auto_opt: "✨ Auto-Optimizar Proporciones de Unión",
+        actions: "Acciones",
+        calc_btn: "🔄 Calcular Distribución Ahora",
+        save_btn: "💾 Guardar Todos los Ajustes",
+        load_btn: "📥 Cargar Ajustes Guardados",
+        reset_btn: "🔄 Restablecer a Valores de Fábrica",
+        results: "Resultado del Cálculo",
+        warnings: "Advertencias:",
+        main_march_res: "Tropas de Marcha Principal:",
+        tot_march_res: "Total de Tropas de Marcha (Principal):",
+        tot_march_res_join: "Total de Tropas de Marcha (Unión):",
+        each_joiner_res: "Cada Marcha de Unión (de {0} marchas):",
+        tot_join_mark_res: "Total de Tiradores usados en todas las Uniones:",
+        rem_mark_res: "Tiradores Restantes después de la distribución:",
+        tot_used_res: "Total de Tropas Usadas en Todas las Marchas:",
+        disabled_opener: "Desactivado – No eres Iniciador",
+        inf_exceed: "Infantería excedida por {0} tropas.",
+        lan_exceed: "Lanceros excedidos por {0} tropas.",
+        mark_exceed: "Tiradores excedidos por {0} tropas.",
+        pct_exceed: "¡La suma de porcentajes supera el 100%!",
+        not_enough_tooltip: "No hay tropas suficientes. Necesario: {0}",
+        reset_confirm: "¿Estás seguro de que quieres restablecer a los valores de fábrica?",
+        save_alert: "¡Ajustes guardados con éxito!",
+        load_alert: "¡Ajustes cargados con éxito!",
+        footer_text: "❄️ Esta herramienta fue diseñada con ❤️ Por el Dr. Abaziz para todos los Queridos Miembros de IMP ❄️"
+    },
+    ko: {
+        lang_label: "언어:",
+        title: "❄️ Whiteout Survival - 곰 사냥 행군 계산기",
+        subtitle: "집결 피해를 손쉽게 최적화하세요.",
+        general_settings: "일반 설정",
+        base_cap: "행군당 기본 배치 용량:",
+        ape_check: "눈원숭이 보너스 (레벨당 +1500)",
+        level_lbl: "레벨:",
+        ursa_level: "시릴 큰곰의 재앙 레벨 (0-10):",
+        buff1: "배치 용량 버프 I (+10%)",
+        buff2: "배치 용량 버프 II (+20%)",
+        total_cap: "총 배치 용량 (자동 계산):",
+        tot_inf: "총 보병:",
+        tot_lan: "총 창병:",
+        tot_mark: "총 궁병:",
+        joiner_count: "참여 행군 수:",
+        main_card_title: "메인 행군 카드",
+        opener_check: "내가 집결장입니다",
+        inf_pct: "보병 %:",
+        lan_pct: "창병 %:",
+        mark_pct: "궁병 %:",
+        sugg_main: "권장 비율 (메인)",
+        joiner_card_title: "참여 행군 카드",
+        sugg_join: "권장 비율 (참여 - 메인과 동기화됨)",
+        auto_opt: "✨ 참여 비율 자동 최적화",
+        actions: "작업",
+        calc_btn: "🔄 지금 분배 계산",
+        save_btn: "💾 모든 설정 저장",
+        load_btn: "📥 저장된 설정 불러오기",
+        reset_btn: "🔄 공장 초기화로 재설정",
+        results: "계산 결과",
+        warnings: "경고:",
+        main_march_res: "메인 행군 병력:",
+        tot_march_res: "총 행군 병력 (메인):",
+        tot_march_res_join: "총 행군 병력 (참여):",
+        each_joiner_res: "각 참여 행군 ({0}개 행군 중):",
+        tot_join_mark_res: "모든 참여에서 사용된 총 궁병:",
+        rem_mark_res: "분배 후 남은 궁병:",
+        tot_used_res: "모든 행군에서 사용된 총 병력:",
+        disabled_opener: "비활성화됨 – 집결장이 아닙니다",
+        inf_exceed: "보병이 {0}명 초과되었습니다.",
+        lan_exceed: "창병이 {0}명 초과되었습니다.",
+        mark_exceed: "궁병이 {0}명 초과되었습니다.",
+        pct_exceed: "백분율 합계가 100%를 초과합니다!",
+        not_enough_tooltip: "병력이 부족합니다. 필요: {0}",
+        reset_confirm: "공장 초기화로 재설정하시겠습니까?",
+        save_alert: "설정이 성공적으로 저장되었습니다!",
+        load_alert: "설정이 성공적으로 로드되었습니다!",
+        footer_text: "❄️ 이 도구는 IMP의 모든 사랑하는 회원들을 위해 Dr Abaziz가 ❤️와 함께 설계했습니다 ❄️"
+    },
+    zh: {
+        lang_label: "语言:",
+        title: "❄️ Whiteout Survival - 熊猎行军计算器",
+        subtitle: "轻松优化您的集结伤害。",
+        general_settings: "常规设置",
+        base_cap: "每次行军基础部署容量:",
+        ape_check: "雪猿加成 (每级+1500)",
+        level_lbl: "等级:",
+        ursa_level: "西里尔巨熊之灾等级 (0-10):",
+        buff1: "部署容量增益 I (+10%)",
+        buff2: "部署容量增益 II (+20%)",
+        total_cap: "总部署容量 (自动计算):",
+        tot_inf: "总步兵:",
+        tot_lan: "总枪兵:",
+        tot_mark: "总射手:",
+        joiner_count: "加入行军数量:",
+        main_card_title: "主行军卡片",
+        opener_check: "我是集结发起者",
+        inf_pct: "步兵 %:",
+        lan_pct: "枪兵 %:",
+        mark_pct: "射手 %:",
+        sugg_main: "建议比例 (主行军)",
+        joiner_card_title: "加入行军卡片",
+        sugg_join: "建议比例 (加入 - 与主行军同步)",
+        auto_opt: "✨ 自动优化加入比例",
+        actions: "操作",
+        calc_btn: "🔄 立即计算分配",
+        save_btn: "💾 保存所有设置",
+        load_btn: "📥 加载保存的设置",
+        reset_btn: "🔄 重置为出厂默认",
+        results: "计算结果",
+        warnings: "警告:",
+        main_march_res: "主行军部队:",
+        tot_march_res: "总行军部队 (主行军):",
+        tot_march_res_join: "总行军部队 (加入):",
+        each_joiner_res: "每次加入行军 (共 {0} 次):",
+        tot_join_mark_res: "所有加入行军中使用的总射手:",
+        rem_mark_res: "分配后剩余射手:",
+        tot_used_res: "所有行军中使用的总部队:",
+        disabled_opener: "已禁用 – 不是集结发起者",
+        inf_exceed: "步兵超出了 {0} 兵力。",
+        lan_exceed: "枪兵超出了 {0} 兵力。",
+        mark_exceed: "射手超出了 {0} 兵力。",
+        pct_exceed: "百分比总和超过100%！",
+        not_enough_tooltip: "兵力不足。 需要: {0}",
+        reset_confirm: "您确定要重置为出厂默认设置吗？",
+        save_alert: "设置已成功保存！",
+        load_alert: "设置已成功加载！",
+        footer_text: "❄️ 本工具由 Dr Abaziz 怀着 ❤️ 为所有亲爱的 IMP 成员设计 ❄️"
+    }
+};
+
+const PRESETS = [ [4, 4, 92], [5, 5, 90], [10, 10, 80], [10, 20, 70], [15, 10, 75], [15, 25, 60], [0, 20, 80], [0, 30, 70] ];
+const el = id => document.getElementById(id);
+const val = id => parseFloat(el(id).value) || 0;
+const fmt = num => Math.floor(num).toLocaleString();
+
+let currentLang = 'en';
+let t = I18N[currentLang];
+
+function init() {
+    createPresetButtons();
+    loadLocalSettings(false); 
+    const inputs = document.querySelectorAll('input, select');
+    inputs.forEach(input => {
+        input.addEventListener('input', () => {
+            if (input.id === 'langSelect') setLanguage(input.value);
+            updateUI();
+            triggerCloudSync(); // Sync on every change
+        });
+        if(input.type === 'checkbox') input.addEventListener('change', () => { updateUI(); triggerCloudSync(); });
+    });
+    el('calcBtn').addEventListener('click', updateUI);
+    el('saveBtn').addEventListener('click', () => { saveSettings(); showToast(t.save_alert); });
+    el('loadBtn').addEventListener('click', () => { loadLocalSettings(true); });
+    el('resetBtn').addEventListener('click', () => {
+        if(confirm(t.reset_confirm)) { localStorage.removeItem('bearHuntConfig'); location.reload(); }
+    });
+    el('autoOptBtn').addEventListener('click', optimizeJoiners);
+    setLanguage(currentLang);
+    updateUI();
+}
+
+function setLanguage(lang) {
+    currentLang = lang;
+    t = I18N[lang] || I18N['en'];
+    el('langSelect').value = lang;
+    document.documentElement.lang = lang;
+    document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
+    document.querySelectorAll('[data-i18n]').forEach(elem => {
+        const key = elem.getAttribute('data-i18n');
+        if (t[key]) elem.innerHTML = t[key];
+    });
+    localStorage.setItem('bearHuntLang', lang);
+    updateUI();
+}
+
+function createPresetButtons() {
+    const mainContainer = el('mainPresets');
+    const joinerContainer = el('joinerPresets');
+    PRESETS.forEach(ratio => {
+        const text = ratio.join('-');
+        const btnMain = document.createElement('button'); btnMain.className = 'btn green'; btnMain.innerText = text;
+        btnMain.onclick = () => { el('mInf').value = ratio[0]; el('mLan').value = ratio[1]; el('mMark').value = ratio[2]; updateUI(); triggerCloudSync(); };
+        mainContainer.appendChild(btnMain);
+        const btnJoiner = document.createElement('button'); btnJoiner.className = 'btn green'; btnJoiner.innerText = text;
+        btnJoiner.onclick = () => { el('jInf').value = ratio[0]; el('jLan').value = ratio[1]; el('jMark').value = ratio[2]; updateUI(); triggerCloudSync(); };
+        joinerContainer.appendChild(btnJoiner);
+    });
+}
+
+function updatePresetsState(totalCap, type, availI, availL, availM) {
+    const isMain = type === 'main';
+    const container = isMain ? el('mainPresets') : el('joinerPresets');
+    const btns = container.querySelectorAll('button');
+    const opener = el('openerCheck').checked;
+    const jCount = val('joinerCount');
+    if(isMain && !opener) { btns.forEach(btn => { btn.disabled = true; btn.className = 'btn'; }); return; }
+    const multiplier = isMain ? 1 : jCount;
+    btns.forEach((btn, index) => {
+        const ratio = PRESETS[index];
+        const reqI = (totalCap * ratio[0] / 100) * multiplier;
+        const reqL = (totalCap * ratio[1] / 100) * multiplier;
+        const reqM = (totalCap * ratio[2] / 100) * multiplier;
+        if(reqI > availI || reqL > availL || reqM > availM) { btn.className = 'btn red'; btn.disabled = true; } 
+        else { btn.className = 'btn green'; btn.disabled = false; }
+    });
+}
+
+// ==========================================
+// FIX 1: AUTO-OPTIMIZE WITH LIMITS
+// ==========================================
+function optimizeJoiners() {
+    let baseCap = val('baseCap');
+    let ape = el('apeCheck').checked ? val('apeLevel') * 1500 : 0;
+    let ursa = val('ursaLevel') * 3000;
+    let b1 = el('buff1Check').checked ? baseCap * 0.1 : 0;
+    let b2 = el('buff2Check').checked ? baseCap * 0.2 : 0;
+    let totalCap = Math.floor(baseCap + ape + ursa + b1 + b2);
+
+    let isOpener = el('openerCheck').checked;
+    let mainI = isOpener ? Math.floor(totalCap * val('mInf') / 100) : 0;
+    let mainL = isOpener ? Math.floor(totalCap * val('mLan') / 100) : 0;
+    let mainM = isOpener ? Math.floor(totalCap * val('mMark') / 100) : 0;
+
+    let jCount = val('joinerCount');
+    if(jCount <= 0) return;
+
+    let remI = val('infTotal') - mainI;
+    let remL = val('lanTotal') - mainL;
+    let remM = val('markTotal') - mainM;
+
+    let availI = remI / jCount;
+    let availL = remL / jCount;
+    let availM = remM / jCount;
+
+    let targetC = totalCap;
+
+    let i_use = Math.min(targetC * 0.02, availI);
+    let l_use = Math.min(targetC * 0.02, availL);
+
+    let space = targetC - i_use - l_use;
+    let m_use = Math.min(availM, space);
+    space -= m_use;
+
+    let l_add = Math.min(space, Math.min(targetC * 0.20 - l_use, availL - l_use));
+    if (l_add > 0) { l_use += l_add; space -= l_add; }
+
+    let i_add = Math.min(space, Math.min(targetC * 0.15 - i_use, availI - i_use));
+    if (i_add > 0) { i_use += i_add; space -= i_add; }
+
+    el('jInf').value = parseFloat(((i_use / targetC) * 100).toFixed(2));
+    el('jLan').value = parseFloat(((l_use / targetC) * 100).toFixed(2));
+    el('jMark').value = parseFloat(((m_use / targetC) * 100).toFixed(2));
+
+    updateUI();
+}
+
+window.copyToClipboard = function(text) {
+    navigator.clipboard.writeText(text).catch(err => {
+        console.error('Failed to copy', err);
+    });
+};
+
+
+window.copyToClipboard = function(text) { navigator.clipboard.writeText(text); };
+function formatTroopLine(label, num, pct) { return `<div style="margin-bottom: 4px;">${label}: ${fmt(num)} <button class="copy-btn" onclick="copyToClipboard('${num}')">📋</button> (${pct}%)</div>`; }
+
+function updateUI() {
+    let baseCap = val('baseCap');
+    let ape = el('apeCheck').checked ? val('apeLevel') * 1500 : 0;
+    let ursa = val('ursaLevel') * 3000;
+    let totalCap = Math.floor(baseCap + ape + ursa + (el('buff1Check').checked ? baseCap * 0.1 : 0) + (el('buff2Check').checked ? baseCap * 0.2 : 0));
+    el('totalCapDisplay').innerText = fmt(totalCap);
+
+    let isOpener = el('openerCheck').checked;
+    el('mainInputsWrapper').classList.toggle('disabled-section', !isOpener);
+
+    let mainI = isOpener ? Math.floor(totalCap * val('mInf') / 100) : 0;
+    let mainL = isOpener ? Math.floor(totalCap * val('mLan') / 100) : 0;
+    let mainM = isOpener ? Math.floor(totalCap * val('mMark') / 100) : 0;
+
+    let jCount = val('joinerCount');
+    let jI = Math.floor(totalCap * val('jInf') / 100);
+    let jL = Math.floor(totalCap * val('jLan') / 100);
+    let jM = Math.floor(totalCap * val('jMark') / 100);
+
+    let usedI = mainI + (jI * jCount); let usedL = mainL + (jL * jCount); let usedM = mainM + (jM * jCount);
+    let totInf = val('infTotal'); let totLan = val('lanTotal'); let totMark = val('markTotal');
+
+    updatePresetsState(totalCap, 'main', totInf, totLan, totMark);
+    updatePresetsState(totalCap, 'joiner', totInf - mainI, totLan - mainL, totMark - mainM);
+
+    if (!isOpener) { el('outMainHtml').innerHTML = `<i>${t.disabled_opener}</i>`; el('outMainTotal').innerText = "0"; } 
+    else {
+        el('outMainHtml').innerHTML = `${formatTroopLine('Inf', mainI, val('mInf'))}${formatTroopLine('Lan', mainL, val('mLan'))}Mark: ${fmt(mainM)} (${val('mMark')}%)`;
+        el('outMainTotal').innerText = fmt(mainI + mainL + mainM);
+    }
+
+    if(t.each_joiner_res) el('lblEachJoiner').innerHTML = t.each_joiner_res.replace('{0}', jCount);
+    el('outJoinerHtml').innerHTML = `${formatTroopLine('Inf', jI, val('jInf'))}${formatTroopLine('Lan', jL, val('jLan'))}Mark: ${fmt(jM)} (${val('jMark')}%)`;
+    el('outJoinerTotal').innerText = fmt(jI + jL + jM);
+    el('outTotJoinMark').innerText = fmt(jM * jCount);
+    el('outRemMark').innerText = fmt(totMark - usedM);
+    el('outUsedInf').innerText = fmt(usedI); el('outUsedLan').innerText = fmt(usedL); el('outUsedMark').innerText = fmt(usedM);
+
+    let warnings = [];
+    if (usedI > totInf + 5) warnings.push(t.inf_exceed.replace('{0}', fmt(usedI - totInf)));
+    if (usedL > totLan + 5) warnings.push(t.lan_exceed.replace('{0}', fmt(usedL - totLan)));
+    if (usedM > totMark + 5) warnings.push(t.mark_exceed.replace('{0}', fmt(usedM - totMark)));
+
+    el('warningBox').style.display = warnings.length ? 'block' : 'none';
+    el('warningList').innerHTML = warnings.map(w => `<li>${w}</li>`).join('');
+}
+
+function getSettingsObject() {
+    return {
+        lang: el('langSelect').value, baseCap: el('baseCap').value, apeCheck: el('apeCheck').checked, apeLevel: el('apeLevel').value,
+        ursaLevel: el('ursaLevel').value, buff1Check: el('buff1Check').checked, buff2Check: el('buff2Check').checked,
+        infTotal: el('infTotal').value, lanTotal: el('lanTotal').value, markTotal: el('markTotal').value,
+        joinerCount: el('joinerCount').value, openerCheck: el('openerCheck').checked,
+        mInf: el('mInf').value, mLan: el('mLan').value, mMark: el('mMark').value,
+        jInf: el('jInf').value, jLan: el('jLan').value, jMark: el('jMark').value
+    };
+}
+
+function applySettingsObject(config) {
+    if (!config) return;
+    Object.keys(config).forEach(key => {
+        const item = el(key);
+        if (item) {
+            if (item.type === 'checkbox') item.checked = config[key];
+            else item.value = config[key];
+        }
+    });
+    if (config.lang) setLanguage(config.lang);
+    updateUI(); // Ensure UI updates after values are set
+}
+
+function saveSettings() {
+    const sets = getSettingsObject();
+    localStorage.setItem('bearHuntConfig', JSON.stringify(sets));
+    if (activeUser && activeCharacterId) {
+        db.collection('users').doc(activeUser.uid).collection('characters').doc(activeCharacterId).update({ settings: sets });
+    }
+}
+
+function loadLocalSettings(manual) {
+    const saved = localStorage.getItem('bearHuntConfig');
+    if (saved) applySettingsObject(JSON.parse(saved));
+    if (manual) showToast(t.load_alert);
+}
+
+window.onload = init;
+</script>
+</body>
+</html>
